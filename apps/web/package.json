@@ -17,7 +17,7 @@
     "@supabase/supabase-js": "^2.46.1",
     "clsx": "^2.1.1",
     "msedge-tts": "^2.0.6",
-    "next": "15.5.5",
+    "next": "15.5.19",
     "openai": "^6.45.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -30,7 +30,7 @@
     "@types/react-dom": "19.2.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.19.0",
-    "eslint-config-next": "15.5.5",
+    "eslint-config-next": "15.5.19",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "typescript": "5.9.3"
