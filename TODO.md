@@ -1,29 +1,46 @@
-# Paxibay — Việc cần Mr Kien làm khi về
+# Paxibay — Việc cần Mr Kien làm
 
 Thứ tự ưu tiên. Đánh dấu xong khi làm.
 
 ---
 
-## 1️⃣ Setup Supabase (15 phút)
+## ✅ ĐÃ XONG (Claude làm)
 
-- [ ] Tạo Supabase project tại https://supabase.com/dashboard
-  - Tên: `paxibay-prod` (hoặc `-staging`)
-  - Region: **Singapore**
-  - Password: lưu vào 1Password
-- [ ] Copy 3 giá trị từ Project Settings → API:
-  - `URL` → `NEXT_PUBLIC_SUPABASE_URL`
-  - `anon public` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `service_role` → `SUPABASE_SERVICE_ROLE_KEY` (giữ kín)
+- [x] `.env.local` đã điền: Supabase (project `ezcvrvjzlkqybzuurfda` "Paxibay"), Pexels key, BYOK master key
+- [x] Code đã push lên https://github.com/Kienduoc/paxibay (branch `main`)
+- [x] SQL migration gộp sẵn: `infrastructure/supabase/APPLY.sql`
+- [x] Supabase anon key verified hoạt động (chỉ thiếu bảng)
 
-- [ ] Cài Supabase CLI: `npm install -g supabase`
-- [ ] Link project:
-  ```bash
-  cd paxibay/infrastructure/supabase
-  supabase login
-  supabase link --project-ref <YOUR_REF>
-  supabase db push
-  ```
-- [ ] Vào dashboard → Storage → tạo 6 buckets:
+## ⏳ CÒN LẠI — 2 việc
+
+### A. Chạy migration (BẮT BUỘC — 30 giây)
+
+Cách dễ nhất (không cần password):
+1. Mở: https://supabase.com/dashboard/project/ezcvrvjzlkqybzuurfda/sql/new
+2. Mở file `infrastructure/supabase/APPLY.sql`, copy toàn bộ
+3. Paste vào SQL Editor → bấm **Run**
+4. Kiểm tra Table Editor → phải có 8 bảng: profiles, subscriptions, api_keys, projects, scenes, renders, assets, usage_events
+
+(Hoặc nếu thích CLI: `cd infrastructure/supabase && supabase link --project-ref ezcvrvjzlkqybzuurfda && supabase db push` — sẽ hỏi DB password.)
+
+### B. Thêm LLM key (BẮT BUỘC để "Generate script" chạy)
+
+⚠️ Key "LLM" bạn gửi bị trùng Pexels key — không hợp lệ. Cần 1 trong 2:
+- Anthropic: https://console.anthropic.com → tạo key `sk-ant-...`
+- HOẶC OpenRouter: https://openrouter.ai/keys → `sk-or-...`
+
+Rồi mở `apps/web/.env.local`, bỏ comment + điền:
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+---
+
+## (THAM KHẢO) Setup Supabase từ đầu — ĐÃ LÀM, để lại cho lần sau
+
+- [x] Project Paxibay đã tạo (region ap-south-1)
+- [x] Storage → 6 buckets ĐÃ TẠO (voice, footage, music, renders, assets, thumbnails) ✓
+- [ ] (Tham khảo) Nếu tạo lại buckets bằng tay:
   | Bucket | Public |
   |---|---|
   | voice | ❌ private |
