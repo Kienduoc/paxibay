@@ -1,6 +1,7 @@
 // =============================================================================
 // Constants — single source of truth for limits, defaults, mappings
 // =============================================================================
+import type { Plan } from "./types";
 
 export const FPS = 30;
 
@@ -88,6 +89,27 @@ export const LLM_MODELS = {
     { id: "llama3.3:8b", name: "Llama 3.3 8B", tier: "local" },
   ],
 } as const;
+
+// ---------------------------------------------------------------------------
+// Credits — point system. Each action costs credits; admin/plan grants them.
+// ---------------------------------------------------------------------------
+export const CREDIT_COSTS = {
+  script: 10, // generate full script (1 LLM call)
+  voice_per_scene: 2, // TTS per scene
+  footage_per_scene: 1, // Pexels download per scene
+  render: 20, // one render
+} as const;
+
+// Default credit grant per plan (admin can override per user)
+export const CREDIT_GRANTS: Record<Plan, number> = {
+  free: 100,
+  pro: 3000,
+  business: 50000,
+};
+
+export function creditsRemaining(p: { credits_total: number; credits_used: number }): number {
+  return Math.max(0, p.credits_total - p.credits_used);
+}
 
 // Music vibe → tag mapping (for asset library lookup)
 export const MUSIC_VIBES = [

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { startRenderInputSchema } from "@paxibay/core";
+import { startRenderInputSchema, CREDIT_COSTS } from "@paxibay/core";
 import { requireUser } from "@/lib/api/auth";
 import { handleApiError, ApiException } from "@/lib/api/errors";
 import { buildManifest } from "@/lib/api/manifest";
 import { pickMusicTrack } from "@/lib/providers/music";
+import { spendCredits } from "@/lib/api/credits";
 
 export const runtime = "nodejs";
 
@@ -82,6 +83,12 @@ export async function POST(request: Request) {
       .from("renders")
       .update({ manifest_snapshot: manifest })
       .eq("id", render.id);
+
+    // Deduct credits for the render (admins exempt)
+    await spendCredits(supabase, user.id, CREDIT_COSTS.render, "credit_render", {
+      project_id: input.project_id,
+      render_id: render.id,
+    });
 
     return NextResponse.json({
       render_id: render.id,

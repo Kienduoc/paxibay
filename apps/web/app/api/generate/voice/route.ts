@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { generateVoiceInputSchema } from "@paxibay/core";
+import { generateVoiceInputSchema, CREDIT_COSTS } from "@paxibay/core";
 import { requireUser } from "@/lib/api/auth";
 import { handleApiError, ApiException } from "@/lib/api/errors";
 import { synthesize } from "@/lib/providers/tts";
 import { uploadToStorage } from "@/lib/supabase/storage";
 import { getUserByok } from "@/lib/api/byok";
+import { spendCredits } from "@/lib/api/credits";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -119,6 +120,17 @@ export async function POST(request: Request) {
         voice_chars: totalChars,
       },
     });
+
+    // Deduct credits per scene actually synthesized (admins exempt)
+    if (processed > 0) {
+      await spendCredits(
+        supabase,
+        user.id,
+        CREDIT_COSTS.voice_per_scene * processed,
+        "credit_voice",
+        { project_id: projectId, scenes: processed },
+      );
+    }
 
     return NextResponse.json({
       scenes_processed: processed,

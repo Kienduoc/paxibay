@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
-const PROTECTED_PATHS = ["/dashboard", "/create", "/editor", "/library", "/settings"];
+const PROTECTED_PATHS = ["/dashboard", "/create", "/editor", "/library", "/settings", "/admin"];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });

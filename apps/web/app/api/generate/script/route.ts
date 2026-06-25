@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getPrompt } from "@paxibay/prompts";
+import { CREDIT_COSTS } from "@paxibay/core";
 import { requireUser } from "@/lib/api/auth";
 import { handleApiError, ApiException } from "@/lib/api/errors";
 import { callLlm, parseJsonResponse } from "@/lib/providers/llm";
 import { getUserByok } from "@/lib/api/byok";
+import { spendCredits } from "@/lib/api/credits";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -107,6 +109,12 @@ export async function POST(request: Request) {
       .from("projects")
       .update({ status: "ready" })
       .eq("id", project_id);
+
+    // Deduct credits (admins exempt; throws if insufficient)
+    await spendCredits(supabase, user.id, CREDIT_COSTS.script, "credit_script", {
+      project_id,
+      scenes: parsed.scenes.length,
+    });
 
     // Log usage
     await supabase.from("usage_events").insert({

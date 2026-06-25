@@ -41,11 +41,20 @@ export type AssetKind =
 // -----------------------------------------------------------------------------
 // Domain models
 // -----------------------------------------------------------------------------
+export type UserRole = "admin" | "user";
+
 export interface Profile {
   id: string;
+  email: string | null;
   display_name: string | null;
   avatar_url: string | null;
+  role: UserRole;
   plan: Plan;
+  credits_total: number;
+  credits_used: number;
+  is_active: boolean;
+  phone: string | null;
+  company: string | null;
   videos_this_month: number;
   render_minutes: number;
   quota_reset_at: string;
