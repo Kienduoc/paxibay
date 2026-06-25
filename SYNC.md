@@ -1,5 +1,13 @@
 # Paxibay — Đồng bộ hệ thống (theo thứ tự)
 
+> **TRẠNG THÁI (verified live):**
+> - ✅ Bước 1 — Migration: 8 bảng đã tạo + seed nhạc OK
+> - ✅ Bước 2 — Google OAuth: đã bật (authorize → 302 Google)
+> - ❓ Bước 3,4 — cần login thật để xác nhận redirect URI / URL config
+> - ❌ Bước 5 — 9router: base URL SAI (xem dưới)
+> - ❌ Bước 7 — Vercel vẫn bật Deployment Protection (site 302 → SSO)
+> - ❓ Bước 6 — env Vercel: không kiểm tra được vì site sau tường SSO
+
 Làm tuần tự từ trên xuống. Mỗi bước có giá trị copy-paste sẵn.
 
 Giá trị dùng chung:
@@ -64,17 +72,25 @@ Giá trị dùng chung:
 
 ---
 
-## BƯỚC 5 — LLM 9router ⏳ BẮT BUỘC
+## BƯỚC 5 — LLM 9router ❌ BLOCKED — base URL SAI
 
-Code đã hỗ trợ gateway OpenAI-compatible (đọc `LLM_GATEWAY_BASE_URL` + `OPENROUTER_API_KEY`).
+**Đã test:** `https://rk8t3sg.9router.com/health` trả `{"service":"dns-manager"}`
+→ subdomain này là host **quản lý DNS**, KHÔNG phải endpoint LLM. Mọi path
+`/v1/messages`, `/v1/chat/completions`, `/v1/models` đều 404. Base URL copy nhầm.
 
-Cần điền 2 giá trị thật (key "LLM" gửi trước = trùng Pexels, không hợp lệ):
-- `LLM_GATEWAY_BASE_URL` = base URL của 9router (vd `https://api.9router.xxx/v1`)
-- `OPENROUTER_API_KEY` = API key 9router
+**Cần làm:** vào dashboard 9router → lấy đúng **API Base URL** + token.
+9router là router cho Claude Code, thường hiện snippet:
+```
+ANTHROPIC_BASE_URL=https://<đúng-host>.9router.com
+ANTHROPIC_AUTH_TOKEN=sk-...
+```
+LƯU Ý: 9router có thể yêu cầu **agent local đang chạy** (nó proxy subscription
+Claude Code của bạn) → nếu vậy KHÔNG dùng được làm API cho SaaS server.
+Trong trường hợp đó, dùng key thật: Anthropic `sk-ant-...` hoặc OpenRouter `sk-or-...`.
 
-Điền vào: (a) `apps/web/.env.local` để chạy local, VÀ (b) Vercel env (bước 6).
-
-Khi tạo video, chọn AI Model = **"OpenRouter → ..."** trong form (route qua gateway này).
+Code ĐÃ sẵn sàng (provider "claude" + `ANTHROPIC_BASE_URL`, tự strip `/v1`).
+Chỉ cần điền đúng `ANTHROPIC_BASE_URL` + `ANTHROPIC_API_KEY` vào `.env.local` + Vercel.
+Form mặc định model = `cc/claude-opus-4-6`.
 
 ---
 
