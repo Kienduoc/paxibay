@@ -3,7 +3,7 @@
 > **TRẠNG THÁI (verified live — cập nhật mới nhất):**
 > - ✅ Bước 1 — Migration: 8 bảng + 2 view + seed nhạc OK
 > - ✅ Bước 2,3,4 — Google OAuth: HOÀN TẤT (authorize → Google đúng client_id, redirect_to Vercel được chấp nhận)
-> - ❌ Bước 5 — 9router: base URL SAI (host "dns-manager", không phải API)
+> - ✅ Bước 5 — 9router LLM: VERIFIED end-to-end (local `http://localhost:20128/v1`, model `cc/claude-opus-4-6`, OpenAI path /chat/completions). Sinh script review 6 scene OK.
 > - ✅ Bước 7 — Vercel Deployment Protection: đã TẮT (site trả 200)
 > - 🔴 **Bước 6/8 — VERCEL BUILD FAILED**: site hiện trả trang "Deployment has failed". Build lỗi → xem fix bên dưới.
 
@@ -88,25 +88,22 @@ Giá trị dùng chung:
 
 ---
 
-## BƯỚC 5 — LLM 9router ❌ BLOCKED — base URL SAI
+## BƯỚC 5 — LLM 9router ✅ DONE (verified)
 
-**Đã test:** `https://rk8t3sg.9router.com/health` trả `{"service":"dns-manager"}`
-→ subdomain này là host **quản lý DNS**, KHÔNG phải endpoint LLM. Mọi path
-`/v1/messages`, `/v1/chat/completions`, `/v1/models` đều 404. Base URL copy nhầm.
+9router app chạy local (port 20128) + tunnel `r4ph3yx.abc-tunnel.us`.
+Endpoint đúng: **OpenAI-compatible** `/v1/chat/completions` (KHÔNG phải Anthropic
+`/v1/messages` — Anthropic SDK bị 401 với key này; OpenAI path 200 sạch).
 
-**Cần làm:** vào dashboard 9router → lấy đúng **API Base URL** + token.
-9router là router cho Claude Code, thường hiện snippet:
-```
-ANTHROPIC_BASE_URL=https://<đúng-host>.9router.com
-ANTHROPIC_AUTH_TOKEN=sk-...
-```
-LƯU Ý: 9router có thể yêu cầu **agent local đang chạy** (nó proxy subscription
-Claude Code của bạn) → nếu vậy KHÔNG dùng được làm API cho SaaS server.
-Trong trường hợp đó, dùng key thật: Anthropic `sk-ant-...` hoặc OpenRouter `sk-or-...`.
+**Đã verify:** sinh script review 6 scene tiếng Việt OK (~17s, model `cc/claude-opus-4-6`).
 
-Code ĐÃ sẵn sàng (provider "claude" + `ANTHROPIC_BASE_URL`, tự strip `/v1`).
-Chỉ cần điền đúng `ANTHROPIC_BASE_URL` + `ANTHROPIC_API_KEY` vào `.env.local` + Vercel.
-Form mặc định model = `cc/claude-opus-4-6`.
+Cấu hình (provider "openrouter" trong form → gateway):
+- LOCAL `.env.local`: `LLM_GATEWAY_BASE_URL=http://localhost:20128/v1` + `OPENROUTER_API_KEY=<key 9router>`
+- VERCEL: đổi base URL sang tunnel `https://r4ph3yx.abc-tunnel.us/v1`
+  ⚠️ Tunnel chỉ sống khi máy bạn + app 9router đang chạy. Nếu tắt máy → LLM trên
+  Vercel sẽ fail. Để production ổn định cần endpoint LLM luôn-on (key thật hoặc
+  9router tunnel cố định/always-on).
+
+Code đã thêm `stream:false` (9router mặc định stream → ép trả JSON đơn).
 
 ---
 

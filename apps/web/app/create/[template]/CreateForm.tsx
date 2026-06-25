@@ -22,7 +22,7 @@ export function CreateForm({
   const [audience, setAudience] = useState("smb");
   const [tone, setTone] = useState("professional");
   const [duration, setDuration] = useState(recommendedDuration);
-  const [llmProvider, setLlmProvider] = useState("claude");
+  const [llmProvider, setLlmProvider] = useState("openrouter");
   const [llmModel, setLlmModel] = useState("cc/claude-opus-4-6");
   const [voiceProvider, setVoiceProvider] = useState<"edge-tts" | "vbee">("edge-tts");
   const [voiceCode, setVoiceCode] = useState("vi-VN-HoaiMyNeural");
@@ -138,11 +138,10 @@ export function CreateForm({
               }}
               className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 focus:outline-none focus:border-brand"
             >
-              <option value="claude::cc/claude-opus-4-6">9router → Claude Opus 4.6 (mặc định)</option>
+              <option value="openrouter::cc/claude-opus-4-6">9router → Claude Opus 4.6 (mặc định)</option>
+              <option value="openrouter::cx/gpt-5.5">9router → GPT-5.5</option>
               <option value="claude::claude-sonnet-4-6">Claude Sonnet 4.6 (Anthropic trực tiếp)</option>
               <option value="claude::claude-opus-4-8">Claude Opus 4.8 (premium)</option>
-              <option value="claude::claude-haiku-4-5">Claude Haiku 4.5 (nhanh)</option>
-              <option value="openrouter::anthropic/claude-sonnet-4-6">OpenRouter → Claude (BYOK)</option>
               <option value="openrouter::deepseek/deepseek-r1">OpenRouter → DeepSeek R1 (rẻ)</option>
             </select>
           </div>

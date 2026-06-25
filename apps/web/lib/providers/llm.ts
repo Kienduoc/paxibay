@@ -125,6 +125,7 @@ async function callOpenRouter(
       model,
       max_tokens: opts.max_tokens ?? 4096,
       temperature: opts.temperature ?? 0.7,
+      stream: false, // some gateways (9router) stream by default → force single JSON
       messages: [
         { role: "system", content: opts.system },
         { role: "user", content: opts.user },
