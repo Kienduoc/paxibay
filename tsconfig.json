@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "noEmit": true,
+    "paths": {
+      "@paxibay/core": ["./packages/core/src"],
+      "@paxibay/core/*": ["./packages/core/src/*"]
+    }
+  },
+  "include": ["packages/templates/src/**/*", "remotion.config.ts"],
+  "exclude": ["node_modules", "dist", ".next", "out", "apps", "packages/core", "packages/prompts"]
+}

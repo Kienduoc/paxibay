@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Env files (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+.npm
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Render artifacts
+out/
+public/voice/
+public/footage/
+public/music/
+!public/music/.gitkeep
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# Secrets (extra safety)
+*.pem
+*.key
+*credentials*
+*secret*

@@ -1,0 +1,29 @@
+{
+  "name": "paxibay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Paxibay — AI-driven Vietnamese video generation SaaS",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@paxibay/web",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "studio": "remotion studio --config remotion.config.ts",
+    "render": "remotion render --config remotion.config.ts"
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.482",
+    "@remotion/zod-types": "^4.0.482",
+    "prettier": "3.8.1",
+    "remotion": "^4.0.482",
+    "typescript": "5.9.3"
+  }
+}
