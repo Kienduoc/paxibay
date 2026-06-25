@@ -16,9 +16,13 @@ create extension if not exists "pg_trgm";        -- trigram search
 -- ============================================================================
 -- 1. ENUMS
 -- ============================================================================
-create type plan_tier as enum ('free', 'pro', 'business');
+do $$ begin
+  create type plan_tier as enum ('free', 'pro', 'business');
+exception when duplicate_object then null;
+end $$;
 
-create type template_kind as enum (
+do $$ begin
+  create type template_kind as enum (
   'app-intro',
   'review',
   'product-ad',
@@ -26,42 +30,65 @@ create type template_kind as enum (
   'news',
   'tutorial'
 );
+exception when duplicate_object then null;
+end $$;
 
-create type project_status as enum (
+do $$ begin
+  create type project_status as enum (
   'draft',          -- script chưa generate xong / user đang edit
   'ready',          -- script + assets sẵn sàng, có thể render
   'archived'        -- user xóa mềm
 );
+exception when duplicate_object then null;
+end $$;
 
-create type render_status as enum (
+do $$ begin
+  create type render_status as enum (
   'queued',
   'running',
   'succeeded',
   'failed',
   'cancelled'
 );
+exception when duplicate_object then null;
+end $$;
 
-create type render_location as enum ('local', 'cloud');
+do $$ begin
+  create type render_location as enum ('local', 'cloud');
+exception when duplicate_object then null;
+end $$;
 
-create type aspect_ratio as enum ('16:9', '9:16', '1:1');
+do $$ begin
+  create type aspect_ratio as enum ('16:9', '9:16', '1:1');
+exception when duplicate_object then null;
+end $$;
 
-create type voice_provider as enum ('edge-tts', 'vbee', 'piper');
+do $$ begin
+  create type voice_provider as enum ('edge-tts', 'vbee', 'piper');
+exception when duplicate_object then null;
+end $$;
 
-create type llm_provider as enum (
+do $$ begin
+  create type llm_provider as enum (
   'claude',
   'openai',
   'openrouter',
   'gemini',
   'local-ollama'
 );
+exception when duplicate_object then null;
+end $$;
 
-create type asset_kind as enum (
+do $$ begin
+  create type asset_kind as enum (
   'logo',
   'custom-footage',
   'custom-music',
   'thumbnail',
   'render-output'
 );
+exception when duplicate_object then null;
+end $$;
 
 
 -- ============================================================================
@@ -71,7 +98,7 @@ create type asset_kind as enum (
 -- ----------------------------------------------------------------------------
 -- profiles — 1:1 with auth.users
 -- ----------------------------------------------------------------------------
-create table public.profiles (
+create table if not exists public.profiles (
   id                uuid primary key references auth.users(id) on delete cascade,
   display_name      text,
   avatar_url        text,
@@ -92,12 +119,12 @@ create table public.profiles (
   updated_at        timestamptz not null default now()
 );
 
-create index idx_profiles_plan on public.profiles(plan);
+create index if not exists idx_profiles_plan on public.profiles(plan);
 
 -- ----------------------------------------------------------------------------
 -- subscriptions — Stripe billing state (1:1 with profile)
 -- ----------------------------------------------------------------------------
-create table public.subscriptions (
+create table if not exists public.subscriptions (
   id                       uuid primary key default gen_random_uuid(),
   user_id                  uuid not null unique references public.profiles(id) on delete cascade,
 
@@ -115,12 +142,12 @@ create table public.subscriptions (
   updated_at               timestamptz not null default now()
 );
 
-create index idx_subscriptions_status on public.subscriptions(status);
+create index if not exists idx_subscriptions_status on public.subscriptions(status);
 
 -- ----------------------------------------------------------------------------
 -- api_keys — User BYOK (Vbee, OpenRouter, OpenAI...). Encrypted at rest.
 -- ----------------------------------------------------------------------------
-create table public.api_keys (
+create table if not exists public.api_keys (
   id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references public.profiles(id) on delete cascade,
   provider     text not null,                -- 'vbee', 'openrouter', 'openai', 'anthropic'
@@ -140,12 +167,12 @@ create table public.api_keys (
   unique (user_id, provider, label)
 );
 
-create index idx_api_keys_user on public.api_keys(user_id);
+create index if not exists idx_api_keys_user on public.api_keys(user_id);
 
 -- ----------------------------------------------------------------------------
 -- projects — A video project (one per video)
 -- ----------------------------------------------------------------------------
-create table public.projects (
+create table if not exists public.projects (
   id                 uuid primary key default gen_random_uuid(),
   user_id            uuid not null references public.profiles(id) on delete cascade,
   title              text not null default 'Untitled',
@@ -185,21 +212,21 @@ create table public.projects (
   updated_at         timestamptz not null default now()
 );
 
-create index idx_projects_user_updated on public.projects(user_id, updated_at desc);
-create index idx_projects_user_status on public.projects(user_id, status);
-create index idx_projects_template on public.projects(template);
+create index if not exists idx_projects_user_updated on public.projects(user_id, updated_at desc);
+create index if not exists idx_projects_user_status on public.projects(user_id, status);
+create index if not exists idx_projects_template on public.projects(template);
 
 -- Full-text search on title + topic
-alter table public.projects add column search_vector tsvector
+alter table public.projects add column if not exists search_vector tsvector
   generated always as (
     to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(topic,''))
   ) stored;
-create index idx_projects_search on public.projects using gin(search_vector);
+create index if not exists idx_projects_search on public.projects using gin(search_vector);
 
 -- ----------------------------------------------------------------------------
 -- scenes — Ordered list per project
 -- ----------------------------------------------------------------------------
-create table public.scenes (
+create table if not exists public.scenes (
   id                uuid primary key default gen_random_uuid(),
   project_id        uuid not null references public.projects(id) on delete cascade,
   position          integer not null,         -- 0-indexed order within project
@@ -231,12 +258,12 @@ create table public.scenes (
   unique (project_id, position)
 );
 
-create index idx_scenes_project on public.scenes(project_id, position);
+create index if not exists idx_scenes_project on public.scenes(project_id, position);
 
 -- ----------------------------------------------------------------------------
 -- renders — Render history per project
 -- ----------------------------------------------------------------------------
-create table public.renders (
+create table if not exists public.renders (
   id                  uuid primary key default gen_random_uuid(),
   project_id          uuid not null references public.projects(id) on delete cascade,
   user_id             uuid not null references public.profiles(id) on delete cascade,
@@ -271,13 +298,13 @@ create table public.renders (
   created_at          timestamptz not null default now()
 );
 
-create index idx_renders_project_created on public.renders(project_id, created_at desc);
-create index idx_renders_user_status on public.renders(user_id, status);
+create index if not exists idx_renders_project_created on public.renders(project_id, created_at desc);
+create index if not exists idx_renders_user_status on public.renders(user_id, status);
 
 -- ----------------------------------------------------------------------------
 -- assets — User-uploaded files + Paxal library items
 -- ----------------------------------------------------------------------------
-create table public.assets (
+create table if not exists public.assets (
   id           uuid primary key default gen_random_uuid(),
   user_id      uuid references public.profiles(id) on delete cascade,
                                               -- NULL means Paxal-curated library item
@@ -301,14 +328,14 @@ create table public.assets (
   created_at   timestamptz not null default now()
 );
 
-create index idx_assets_user_kind on public.assets(user_id, kind);
-create index idx_assets_library on public.assets(kind) where user_id is null;
-create index idx_assets_tags on public.assets using gin(tags);
+create index if not exists idx_assets_user_kind on public.assets(user_id, kind);
+create index if not exists idx_assets_library on public.assets(kind) where user_id is null;
+create index if not exists idx_assets_tags on public.assets using gin(tags);
 
 -- ----------------------------------------------------------------------------
 -- usage_events — Analytics / billing audit
 -- ----------------------------------------------------------------------------
-create table public.usage_events (
+create table if not exists public.usage_events (
   id           bigserial primary key,
   user_id      uuid not null references public.profiles(id) on delete cascade,
   event        text not null,                 -- 'project_created', 'voice_generated', 'render_completed', ...
@@ -318,8 +345,8 @@ create table public.usage_events (
   created_at   timestamptz not null default now()
 );
 
-create index idx_usage_user_time on public.usage_events(user_id, created_at desc);
-create index idx_usage_event on public.usage_events(event, created_at desc);
+create index if not exists idx_usage_user_time on public.usage_events(user_id, created_at desc);
+create index if not exists idx_usage_event on public.usage_events(event, created_at desc);
 
 
 -- ============================================================================
@@ -342,7 +369,7 @@ end;
 $$ language plpgsql security definer;
 
 drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
+create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
@@ -355,10 +382,10 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger profiles_touch        before update on public.profiles      for each row execute function public.touch_updated_at();
-create trigger subscriptions_touch   before update on public.subscriptions for each row execute function public.touch_updated_at();
-create trigger projects_touch        before update on public.projects      for each row execute function public.touch_updated_at();
-create trigger scenes_touch          before update on public.scenes        for each row execute function public.touch_updated_at();
+create or replace trigger profiles_touch        before update on public.profiles      for each row execute function public.touch_updated_at();
+create or replace trigger subscriptions_touch   before update on public.subscriptions for each row execute function public.touch_updated_at();
+create or replace trigger projects_touch        before update on public.projects      for each row execute function public.touch_updated_at();
+create or replace trigger scenes_touch          before update on public.scenes        for each row execute function public.touch_updated_at();
 
 -- Keep project.scene_count + total_duration_s in sync
 create or replace function public.refresh_project_counters()
@@ -376,7 +403,7 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger scenes_refresh_counters
+create or replace trigger scenes_refresh_counters
   after insert or update or delete on public.scenes
   for each row execute function public.refresh_project_counters();
 
@@ -394,25 +421,30 @@ alter table public.assets         enable row level security;
 alter table public.usage_events   enable row level security;
 
 -- profiles: user reads/updates own
+drop policy if exists profiles_own on public.profiles;
 create policy profiles_own on public.profiles
   using (auth.uid() = id)
   with check (auth.uid() = id);
 
 -- subscriptions: read own, no client write (webhook updates via service role)
+drop policy if exists subscriptions_read_own on public.subscriptions;
 create policy subscriptions_read_own on public.subscriptions
   for select using (auth.uid() = user_id);
 
 -- api_keys: full CRUD on own only
+drop policy if exists api_keys_own on public.api_keys;
 create policy api_keys_own on public.api_keys
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- projects: full CRUD on own only
+drop policy if exists projects_own on public.projects;
 create policy projects_own on public.projects
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- scenes: linked via project ownership
+drop policy if exists scenes_via_project on public.scenes;
 create policy scenes_via_project on public.scenes
   using (
     exists (select 1 from public.projects p where p.id = project_id and p.user_id = auth.uid())
@@ -422,18 +454,23 @@ create policy scenes_via_project on public.scenes
   );
 
 -- renders: read own; create via service role (server-side only)
+drop policy if exists renders_read_own on public.renders;
 create policy renders_read_own on public.renders
   for select using (auth.uid() = user_id);
 
 -- assets: read own + read public library (user_id is null)
+drop policy if exists assets_read on public.assets;
 create policy assets_read on public.assets
   for select using (user_id = auth.uid() or user_id is null);
+drop policy if exists assets_write_own on public.assets;
 create policy assets_write_own on public.assets
   for insert with check (auth.uid() = user_id);
+drop policy if exists assets_delete_own on public.assets;
 create policy assets_delete_own on public.assets
   for delete using (auth.uid() = user_id);
 
 -- usage_events: read own only; insert via service role
+drop policy if exists usage_read_own on public.usage_events;
 create policy usage_read_own on public.usage_events
   for select using (auth.uid() = user_id);
 
@@ -502,7 +539,9 @@ group by user_id, date_trunc('month', created_at);
 -- Seed: Paxibay-curated music library (CC0 / CC-BY from Internet Archive).
 -- These rows have user_id=NULL so they appear to all users via RLS policy.
 
-insert into public.assets (user_id, kind, title, url, mime_type, duration_s, license, attribution, tags) values
+do $$ begin
+  if not exists (select 1 from public.assets where user_id is null and kind = 'custom-music') then
+    insert into public.assets (user_id, kind, title, url, mime_type, duration_s, license, attribution, tags) values
 (null, 'custom-music',
  'Mindfront — Dark Triad',
  'https://archive.org/download/mindfront-dark-triad/Mindfront_-_Dark_Triad.mp3',
@@ -518,5 +557,7 @@ insert into public.assets (user_id, kind, title, url, mime_type, duration_s, lic
  'CC-BY-4.0',
  'Music Archive (CC-BY 4.0)',
  array['ambient','calm','soft','pad']);
+  end if;
+end $$;
 
 -- Add more curated tracks here. Anything with user_id=NULL is library-wide.
