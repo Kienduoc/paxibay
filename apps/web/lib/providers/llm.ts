@@ -90,7 +90,11 @@ function estimateClaudeCost(model: string, inTok: number, outTok: number): numbe
   return (inTok * inPrice + outTok * outPrice) / 1_000_000;
 }
 
-// --- OPENROUTER -----------------------------------------------------------
+// --- OPENAI-COMPATIBLE GATEWAY (OpenRouter / 9router / any /v1 endpoint) -----
+// Base URL is env-configurable so the same code path serves OpenRouter,
+// 9router, or any self-hosted OpenAI-compatible gateway.
+//   LLM_GATEWAY_BASE_URL  — e.g. https://9router.xxx/v1  (default: OpenRouter)
+//   OPENROUTER_API_KEY    — server key (or per-user BYOK)
 async function callOpenRouter(
   model: string,
   opts: LlmGenerateOptions,
@@ -103,7 +107,8 @@ async function callOpenRouter(
       "Thiếu OPENROUTER_API_KEY — set server env hoặc cung cấp BYOK.",
     );
   }
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const baseUrl = (process.env.LLM_GATEWAY_BASE_URL ?? "https://openrouter.ai/api/v1").replace(/\/$/, "");
+  const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -122,7 +127,7 @@ async function callOpenRouter(
     }),
   });
   if (!response.ok) {
-    throw new ApiException("EXTERNAL_API_ERROR", `OpenRouter ${response.status}: ${await response.text()}`);
+    throw new ApiException("EXTERNAL_API_ERROR", `LLM gateway ${response.status}: ${await response.text()}`);
   }
   const data = await response.json();
   return {
