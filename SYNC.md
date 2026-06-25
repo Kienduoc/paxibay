@@ -1,12 +1,28 @@
 # Paxibay — Đồng bộ hệ thống (theo thứ tự)
 
-> **TRẠNG THÁI (verified live):**
-> - ✅ Bước 1 — Migration: 8 bảng đã tạo + seed nhạc OK
-> - ✅ Bước 2 — Google OAuth: đã bật (authorize → 302 Google)
-> - ❓ Bước 3,4 — cần login thật để xác nhận redirect URI / URL config
-> - ❌ Bước 5 — 9router: base URL SAI (xem dưới)
-> - ❌ Bước 7 — Vercel vẫn bật Deployment Protection (site 302 → SSO)
-> - ❓ Bước 6 — env Vercel: không kiểm tra được vì site sau tường SSO
+> **TRẠNG THÁI (verified live — cập nhật mới nhất):**
+> - ✅ Bước 1 — Migration: 8 bảng + 2 view + seed nhạc OK
+> - ✅ Bước 2,3,4 — Google OAuth: HOÀN TẤT (authorize → Google đúng client_id, redirect_to Vercel được chấp nhận)
+> - ❌ Bước 5 — 9router: base URL SAI (host "dns-manager", không phải API)
+> - ✅ Bước 7 — Vercel Deployment Protection: đã TẮT (site trả 200)
+> - 🔴 **Bước 6/8 — VERCEL BUILD FAILED**: site hiện trả trang "Deployment has failed". Build lỗi → xem fix bên dưới.
+
+---
+
+## 🔴 FIX VERCEL BUILD FAILED (ưu tiên)
+
+Local build PASS (17 routes) → lỗi là do **cấu hình monorepo trên Vercel**, không phải code.
+Nguyên nhân thường gặp nhất: **Root Directory chưa trỏ vào `apps/web`** → Vercel chạy `next build` ở gốc repo (không có Next app) → fail.
+
+**Sửa:**
+1. Vercel → project `paxibay-sukx` → Settings → **Build and Deployment**
+2. **Root Directory** = `apps/web`  (bấm Edit, chọn thư mục apps/web)
+3. Framework Preset = **Next.js** (tự nhận)
+4. Install/Build Command = để **mặc định** (Vercel tự chạy `npm install` ở gốc monorepo vì có workspaces, rồi `next build` trong apps/web)
+5. Settings → Environment Variables: thêm đủ 9 biến (bảng Bước 6) cho **Production + Preview**
+6. Deployments → **Redeploy** (hoặc push commit mới)
+
+Nếu vẫn fail sau khi set Root Directory: mở build log (Vercel → Deployments → bản fail → View Logs), copy đoạn lỗi đỏ gửi tôi.
 
 Làm tuần tự từ trên xuống. Mỗi bước có giá trị copy-paste sẵn.
 
