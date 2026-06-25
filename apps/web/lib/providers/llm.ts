@@ -59,7 +59,12 @@ async function callClaude(
       "Thiếu ANTHROPIC_API_KEY — set server env hoặc cung cấp BYOK.",
     );
   }
-  const client = new Anthropic({ apiKey });
+  // ANTHROPIC_BASE_URL lets us route through an Anthropic-compatible gateway
+  // (e.g. 9router with cc/claude-* models). SDK appends "/v1/messages", so we
+  // strip any trailing "/v1" the user may include.
+  const rawBase = process.env.ANTHROPIC_BASE_URL?.trim();
+  const baseURL = rawBase ? rawBase.replace(/\/v1\/?$/, "").replace(/\/$/, "") : undefined;
+  const client = new Anthropic(baseURL ? { apiKey, baseURL } : { apiKey });
   const response = await client.messages.create({
     model,
     max_tokens: opts.max_tokens ?? 4096,
