@@ -13,15 +13,22 @@ export function SignInForm() {
 
   async function signInWithGoogle() {
     setLoading("google");
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
-      },
-    });
-    if (error) {
-      setMsg(`❌ ${error.message}`);
+    setMsg(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
+        },
+      });
+      if (error) {
+        setMsg(`❌ ${error.message}`);
+        setLoading(null);
+      }
+      // on success the browser redirects to Google; loading stays until then
+    } catch (e) {
+      setMsg(`❌ Lỗi cấu hình: ${e instanceof Error ? e.message : String(e)}`);
       setLoading(null);
     }
   }
@@ -30,16 +37,21 @@ export function SignInForm() {
     e.preventDefault();
     setLoading("magic");
     setMsg(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
-      },
-    });
-    if (error) setMsg(`❌ ${error.message}`);
-    else setMsg(`✓ Đã gửi link đăng nhập đến ${email}. Mở email để vào.`);
-    setLoading(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
+        },
+      });
+      if (error) setMsg(`❌ ${error.message}`);
+      else setMsg(`✓ Đã gửi link đăng nhập đến ${email}. Mở email để vào.`);
+    } catch (e) {
+      setMsg(`❌ Lỗi cấu hình: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(null);
+    }
   }
 
   return (
