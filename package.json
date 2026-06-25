@@ -12,7 +12,7 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "studio": "remotion studio --config remotion.config.ts",
+    "studio": "remotion studio --config remotion.config.ts --port 3001",
     "render": "remotion render --config remotion.config.ts"
   },
   "engines": {

@@ -112,7 +112,7 @@ Manifest JSON tải về sẽ có URLs đến voice + footage trong Supabase Sto
 cd paxibay
 # Copy manifest vừa tải vào packages/templates/
 # Mở packages/templates/src/Root.tsx → tạm thay sampleReviewManifest = (paste manifest content)
-npm run studio    # http://localhost:3003 → preview
+npm run studio    # http://localhost:3001 → preview (web app dùng 3000)
 npm run render review out/test.mp4   # render to MP4
 ```
 
